@@ -52,6 +52,7 @@ class CalculatorApp:
                             button_text,
                             bgcolor=ft.Colors.BLACK,
                             color=ft.Colors.WHITE,
+                            on_click=self.button_click,
                         ),
                         col={
                             "xs": 3,
@@ -122,6 +123,55 @@ class CalculatorApp:
         self.letter_size = self.result_size // 3
         self.history_letter_size = self.result_size // 8.5
         self.page.update()
+
+    def button_click(self, e):
+        if e.control.text == "=":
+            pass
+        elif e.control.text == "AC":
+            pass
+        elif e.control.text == "DEL":
+            pass
+        elif e.control.text == "^":
+            self.add_to_expression("**", "^")
+        elif e.control.text in ("(", ")"):
+            self.add_to_expression(
+                e.control.text, e.control.text, check_parentheses=True
+            )
+        elif e.control.text == "ANS":
+            self.add_to_expression(self.last_result, "ANS")
+        elif e.control.text == "√":
+            self.add_to_expression("math.sqrt(", "√(")
+        elif e.control.text == "∛":
+            self.add_to_expression("math.cbrt(", "∛(")
+        elif e.control.text == "π":
+            self.add_to_expression(str(math.pi), "π")
+        elif e.control.text == "+/-":
+            pass
+        elif e.control.text == "%":
+            self.add_to_expression("%", "%")
+        elif e.control.text == "COS":
+            self.add_to_expression("math.cos(math.radians(", "COS(")
+        elif e.control.text == "SEN":
+            self.add_to_expression("math.sin(math.radians(", "SEN(")
+        elif e.control.text == "TAN":
+            self.add_to_expression("math.tan(math.radians(", "TAN(")
+        else:
+            self.add_to_expression(e.control.text, e.control.text)
+
+    def add_to_expression(self, value, display_value, check_parentheses=False):
+        if check_parentheses and value == ")":
+            pattern = re.compile(r"math\.(cos|sin|tan)\(math\.radians\([^()]*$")
+            if pattern.search(self.current_expression):
+                self.current_expression += "))"
+            else:
+                self.current_expression += value
+            self.display_expression += value
+        else:
+            self.current_expression += value
+            self.display_expression += display_value
+
+        self.expression.value = self.display_expression
+        self.expression.update()
 
 
 def main(page: ft.Page):
