@@ -38,14 +38,23 @@ class CalculatorApp:
             border_width=0,
             text_size=self.result_size,
         )
+
+        self.menu = ft.IconButton(
+            icon=ft.Icons.MENU,
+            icon_color="black",
+            icon_size=self.letter_size * 1.5,
+            width=self.letter_size * 1.5,
+            height=self.letter_size * 1.5,
+        )
+
         self.result_size = None
         self.expression_size = None
         self.current_expression = ""
         self.display_expression = ""
         self.last_result = ""
 
-        for row_idx, row in enumerate(self.buttons):
-            for col_idx, button_text in enumerate(row):
+        for _, row in enumerate(self.buttons):
+            for _, button_text in enumerate(row):
                 self.columns.append(
                     ft.Container(
                         ft.Button(
@@ -72,15 +81,7 @@ class CalculatorApp:
                                 ft.ResponsiveRow(
                                     [
                                         ft.Column(
-                                            [
-                                                ft.IconButton(
-                                                    icon=ft.Icons.MENU,
-                                                    icon_color="black",
-                                                    icon_size=self.letter_size * 1.5,
-                                                    width=self.letter_size * 1.5,
-                                                    height=self.letter_size * 1.5,
-                                                )
-                                            ],
+                                            [self.menu],
                                             col={
                                                 "xs": 3,
                                                 "sm": 3,
@@ -137,9 +138,7 @@ class CalculatorApp:
         elif e.control.text == "^":
             self.add_to_expression("**", "^")
         elif e.control.text in ("(", ")"):
-            self.add_to_expression(
-                e.control.text, e.control.text, check_parentheses=True
-            )
+            self.add_to_expression(e.control.text, e.control.text)
         elif e.control.text == "ANS":
             self.add_to_expression(self.last_result, "ANS")
         elif e.control.text == "√":
@@ -161,8 +160,8 @@ class CalculatorApp:
         else:
             self.add_to_expression(e.control.text, e.control.text)
 
-    def add_to_expression(self, value, display_value, check_parentheses=False):
-        if check_parentheses and value == ")":
+    def add_to_expression(self, value, display_value):
+        if value == ")":
             pattern = re.compile(r"math\.(cos|sin|tan)\(math\.radians\([^()]*$")
             if pattern.search(self.current_expression):
                 self.current_expression += "))"
