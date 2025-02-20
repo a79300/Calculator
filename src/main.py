@@ -128,7 +128,7 @@ class CalculatorApp:
         if e.control.text == "=":
             pass
         elif e.control.text == "AC":
-            pass
+            self.clear_expression()
         elif e.control.text == "DEL":
             pass
         elif e.control.text == "^":
@@ -172,6 +172,15 @@ class CalculatorApp:
 
         self.expression.value = self.display_expression
         self.expression.update()
+
+    def clear_expression(self):
+        self.result.value = ""
+        self.expression.value = ""
+        self.current_expression = ""
+        self.display_expression = ""
+        self.result.update()
+        self.expression.update()
+        self.page.update()
 
 
 def main(page: ft.Page):
