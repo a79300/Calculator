@@ -146,7 +146,7 @@ class CalculatorApp:
         elif e.control.text == "π":
             self.add_to_expression(str(math.pi), "π")
         elif e.control.text == "+/-":
-            pass
+            self.toggle_sign()
         elif e.control.text == "%":
             self.add_to_expression("%", "%")
         elif e.control.text == "COS":
@@ -187,6 +187,45 @@ class CalculatorApp:
         self.display_expression = self.display_expression[:-1]
         self.expression.value = self.display_expression
         self.expression.update()
+
+    def toggle_sign(self):
+        if self.current_expression and self.current_expression[-1].isdigit():
+            sign_index = len(self.current_expression) - 1
+            while sign_index >= 0 and (
+                self.current_expression[sign_index].isdigit()
+                or self.current_expression[sign_index] == "."
+            ):
+                sign_index -= 1
+            sign_index += 1
+
+            is_negative = self.current_expression[sign_index - 1] == "-"
+            has_operator_before = sign_index == 0 or any(
+                op in self.current_expression[sign_index - 1] for op in "+-*/"
+            )
+
+            if is_negative:
+                self.current_expression = (
+                    self.current_expression[: sign_index - 1]
+                    + self.current_expression[sign_index:]
+                )
+                self.display_expression = (
+                    self.display_expression[: sign_index - 1]
+                    + self.display_expression[sign_index:]
+                )
+            elif has_operator_before:
+                self.current_expression = (
+                    self.current_expression[:sign_index]
+                    + "-"
+                    + self.current_expression[sign_index:]
+                )
+                self.display_expression = (
+                    self.display_expression[:sign_index]
+                    + "-"
+                    + self.display_expression[sign_index:]
+                )
+            self.expression.value = self.display_expression
+
+            self.expression.update()
 
 
 def main(page: ft.Page):
