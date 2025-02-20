@@ -130,7 +130,7 @@ class CalculatorApp:
         elif e.control.text == "AC":
             self.clear_expression()
         elif e.control.text == "DEL":
-            pass
+            self.delete_last_character()
         elif e.control.text == "^":
             self.add_to_expression("**", "^")
         elif e.control.text in ("(", ")"):
@@ -181,6 +181,12 @@ class CalculatorApp:
         self.result.update()
         self.expression.update()
         self.page.update()
+
+    def delete_last_character(self):
+        self.current_expression = self.current_expression[:-1]
+        self.display_expression = self.display_expression[:-1]
+        self.expression.value = self.display_expression
+        self.expression.update()
 
 
 def main(page: ft.Page):
