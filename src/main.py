@@ -76,6 +76,9 @@ class CalculatorApp:
                                                 ft.IconButton(
                                                     icon=ft.Icons.MENU,
                                                     icon_color="black",
+                                                    icon_size=self.letter_size * 1.5,
+                                                    width=self.letter_size * 1.5,
+                                                    height=self.letter_size * 1.5,
                                                 )
                                             ],
                                             col={
