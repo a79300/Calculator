@@ -126,7 +126,7 @@ class CalculatorApp:
 
     def button_click(self, e):
         if e.control.text == "=":
-            pass
+            self.evaluate_expression()
         elif e.control.text == "AC":
             self.clear_expression()
         elif e.control.text == "DEL":
@@ -226,6 +226,27 @@ class CalculatorApp:
             self.expression.value = self.display_expression
 
             self.expression.update()
+
+    def evaluate_expression(self):
+        try:
+            result_value = eval(
+                self.current_expression, {"__builtins__": None}, {"math": math}
+            )
+
+            if isinstance(result_value, float) and result_value.is_integer():
+                result_value = int(result_value)
+            else:
+                result_value = str(round(result_value, 2))
+
+            self.result.value = str(result_value)
+            self.result.update()
+            self.last_result = str(result_value)
+
+            self.current_expression = ""
+            self.display_expression = ""
+
+        except Exception:
+            self.result.value = "Error"
 
 
 def main(page: ft.Page):
