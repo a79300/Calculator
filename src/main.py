@@ -17,13 +17,16 @@ class CalculatorApp:
         self.page = page
         self.columns = []
 
+        self.get_text_size(self.page.height)
+
         self.expression = ft.TextField(
             hint_text="...",
             color="black",
             text_align=ft.TextAlign.RIGHT,
             read_only=True,
             expand=True,
-            border_width=0
+            border_width=0,
+            text_size=self.expression_size,
         )
 
         self.result = ft.TextField(
@@ -32,7 +35,8 @@ class CalculatorApp:
             text_align=ft.TextAlign.RIGHT,
             read_only=True,
             expand=True,
-            border_width=0
+            border_width=0,
+            text_size=self.result_size,
         )
         self.result_size = None
         self.expression_size = None
@@ -70,7 +74,7 @@ class CalculatorApp:
                                             [
                                                 ft.IconButton(
                                                     icon=ft.Icons.MENU,
-                                                    icon_color="black"
+                                                    icon_color="black",
                                                 )
                                             ],
                                             col={
@@ -108,6 +112,16 @@ class CalculatorApp:
         )
 
         self.page.add(self.stack)
+
+    def get_text_size(self, screen_height):
+        if screen_height <= 650:
+            self.result_size = 70
+        else:
+            self.result_size = 70 + round(((screen_height - 650) // 50), 0) * 20
+        self.expression_size = self.result_size / 2
+        self.letter_size = self.result_size // 3
+        self.history_letter_size = self.result_size // 8.5
+        self.page.update()
 
 
 def main(page: ft.Page):
