@@ -38,23 +38,14 @@ class CalculatorApp:
             border_width=0,
             text_size=self.result_size,
         )
-
-        self.menu = ft.IconButton(
-            icon=ft.Icons.MENU,
-            icon_color="black",
-            icon_size=self.letter_size * 1.5,
-            width=self.letter_size * 1.5,
-            height=self.letter_size * 1.5,
-        )
-
         self.result_size = None
         self.expression_size = None
         self.current_expression = ""
         self.display_expression = ""
         self.last_result = ""
 
-        for _, row in enumerate(self.buttons):
-            for _, button_text in enumerate(row):
+        for row_idx, row in enumerate(self.buttons):
+            for col_idx, button_text in enumerate(row):
                 self.columns.append(
                     ft.Container(
                         ft.Button(
@@ -72,6 +63,33 @@ class CalculatorApp:
                     )
                 )
 
+        self.close_button = ft.IconButton(
+            icon=ft.Icons.CLOSE,
+            icon_color="red",
+            on_click=self.toggle_history,
+            width=self.letter_size,
+            height=self.letter_size,
+        )
+
+        self.history_list = ft.Column(
+            scroll=None,
+            height=self.page.height * 0.55,
+            alignment=ft.MainAxisAlignment.START,
+            controls=[],
+        )
+
+        self.history_container = ft.Container(
+            content=ft.Column(
+                [
+                    ft.ResponsiveRow([self.close_button], alignment="end"),
+                    ft.ResponsiveRow([self.history_list]),
+                ]
+            ),
+            bgcolor=ft.Colors.BLACK,
+            border_radius=ft.border_radius.all(20),
+            padding=ft.padding.all(20),
+            visible=False,
+        )
         self.main_container = ft.Column(
             [
                 ft.ResponsiveRow(
@@ -81,7 +99,16 @@ class CalculatorApp:
                                 ft.ResponsiveRow(
                                     [
                                         ft.Column(
-                                            [self.menu],
+                                            [
+                                                ft.IconButton(
+                                                    icon=ft.Icons.MENU,
+                                                    icon_color="black",
+                                                    on_click=self.toggle_history,
+                                                    icon_size=self.letter_size * 1.5,
+                                                    width=self.letter_size * 1.5,
+                                                    height=self.letter_size * 1.5,
+                                                )
+                                            ],
                                             col={
                                                 "xs": 3,
                                                 "sm": 3,
@@ -112,6 +139,7 @@ class CalculatorApp:
         self.stack = ft.Stack(
             controls=[
                 self.main_container,
+                self.history_container,
             ],
             expand=True,
         )
@@ -128,17 +156,32 @@ class CalculatorApp:
         self.history_letter_size = self.result_size // 8.5
         self.page.update()
 
+    def toggle_history(self, e):
+        self.history_container.visible = not self.history_container.visible
+        if self.history_container.visible:
+            self.load_history()
+        self.page.update()
+
+    def copy_value(self, id):
+        def copy(e):
+            _, result_value = self.page.client_storage.get(id)
+            self.page.set_clipboard(result_value)
+
+        return copy
+
     def button_click(self, e):
         if e.control.text == "=":
             self.evaluate_expression()
         elif e.control.text == "AC":
             self.clear_expression()
         elif e.control.text == "DEL":
-            self.delete_last_character()
+            self.delete_last_character(e)
         elif e.control.text == "^":
             self.add_to_expression("**", "^")
         elif e.control.text in ("(", ")"):
-            self.add_to_expression(e.control.text, e.control.text)
+            self.add_to_expression(
+                e.control.text, e.control.text, check_parentheses=True
+            )
         elif e.control.text == "ANS":
             self.add_to_expression(self.last_result, "ANS")
         elif e.control.text == "√":
@@ -160,8 +203,53 @@ class CalculatorApp:
         else:
             self.add_to_expression(e.control.text, e.control.text)
 
-    def add_to_expression(self, value, display_value):
-        if value == ")":
+    def evaluate_expression(self):
+        try:
+            result_value = eval(
+                self.current_expression, {"__builtins__": None}, {"math": math}
+            )
+
+            if isinstance(result_value, float) and result_value.is_integer():
+                result_value = int(result_value)
+            else:
+                result_value = str(round(result_value, 2))
+
+            self.result.value = self.format_result(str(result_value))
+            self.result.update()
+            self.last_result = str(result_value)
+
+            for history_id in reversed(range(1, 11)):
+                if not self.page.client_storage.contains_key(str(history_id)):
+                    self.page.client_storage.set(
+                        str(history_id), (self.display_expression, result_value)
+                    )
+                    break
+            else:
+                for history_id in reversed(range(1, 11)):
+                    if history_id < 10:
+                        self.page.client_storage.set(
+                            str(history_id + 1),
+                            self.page.client_storage.get(str(history_id)),
+                        )
+                self.page.client_storage.set(
+                    "1", (self.display_expression, result_value)
+                )
+
+            self.load_history()
+            self.current_expression = ""
+            self.display_expression = ""
+
+        except Exception:
+            self.result.value = "Error"
+
+    def add_to_expression(self, value, display_value, check_parentheses=False):
+
+        if len(self.display_expression) > 0 and (
+                value not in "0123456789" or self.display_expression[-1] not in "0123456789"
+            ):
+            self.display_expression += " "
+
+        if check_parentheses and value == ")":
             pattern = re.compile(r"math\.(cos|sin|tan)\(math\.radians\([^()]*$")
             if pattern.search(self.current_expression):
                 self.current_expression += "))"
@@ -184,7 +272,7 @@ class CalculatorApp:
         self.expression.update()
         self.page.update()
 
-    def delete_last_character(self):
+    def delete_last_character(self, e):
         self.current_expression = self.current_expression[:-1]
         self.display_expression = self.display_expression[:-1]
         self.expression.value = self.display_expression
@@ -229,28 +317,24 @@ class CalculatorApp:
 
             self.expression.update()
 
-    def evaluate_expression(self):
-        try:
-            result_value = eval(
-                self.current_expression, {"__builtins__": None}, {"math": math}
-            )
+    def format_result(self, valueNumber):
+        saveValue = valueNumber.split('.')
+        oldValue = list(saveValue[0])
+        newValue = []
+        if len(valueNumber) > 3:
+            counter = 0
+            oldValue.reverse()
+            for i in oldValue:
+                if counter == 3:
+                    newValue.append(' ')
+                    counter = 0
+                newValue.append(i)
+                counter +=1
+            newValue.reverse()
 
-            if isinstance(result_value, float) and result_value.is_integer():
-                result_value = int(result_value)
-            else:
-                result_value = str(round(result_value, 2))
-
-            self.result.value = str(result_value)
-            self.result.update()
-            self.last_result = str(result_value)
-
-            self.current_expression = ""
-            self.display_expression = ""
-
-        except Exception:
-            self.result.value = "Error"
-
-
+            valueNumber = str(''.join(newValue) + '.' + saveValue[1]) if (len(saveValue) > 1) else str(''.join(newValue))
+        return valueNumber
+    
 def main(page: ft.Page):
     CalculatorApp(page)
 
