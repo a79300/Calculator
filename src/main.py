@@ -267,7 +267,14 @@ class CalculatorApp:
                     )
                 )
         self.history_list.update()
-    
+
+    def delete_history(self, id):
+        def delete(e):
+            self.page.client_storage.remove(id)
+            self.load_history()
+
+        return delete
+
     def copy_value(self, id):
         def copy(e):
             _, result_value = self.page.client_storage.get(id)
@@ -276,6 +283,7 @@ class CalculatorApp:
         return copy
 
     def button_click(self, e):
+
         if e.control.text == "=":
             self.evaluate_expression()
         elif e.control.text == "AC":
