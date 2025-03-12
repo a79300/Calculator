@@ -498,4 +498,9 @@ def main(page: ft.Page):
     CalculatorApp(page)
 
 
-ft.app(target=main, assets_dir="assets")
+app = ft.app(target=main, assets_dir="assets", view=ft.AppView.WEB_BROWSER)
+
+# This makes the app work with Replit
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)
