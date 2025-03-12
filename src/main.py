@@ -157,7 +157,11 @@ class CalculatorApp:
         self.history_letter_size = self.result_size // 8.5
         self.page.update()
     
-    def resizeTexts(self):        
+    def resizeTexts(self):
+        ##self.result_size = self.result_size * 0.9
+        ##self.expression_size = self.result_size / 2
+        #print(type(self.result_size))
+        #print(type(self.expression_size))
         self.page.update()
 
     def toggle_history(self, e):
@@ -288,6 +292,7 @@ class CalculatorApp:
 
     def button_click(self, e):
         self.resizeTexts()
+        print(self.current_expression)
 
         if not self.current_expression and e.control.text in "=%DEL^*+-./":
             return
@@ -324,292 +329,164 @@ class CalculatorApp:
         else:
             self.add_to_expression(e.control.text, e.control.text)
 
-    
+    def close_expression(self):
+        count_parenthesis_current_expression = self.current_expression.count('(') - self.current_expression.count(')')
+        self.current_expression += (" )" * count_parenthesis_current_expression)
 
+        count_parenthesis_display_expression = self.display_expression.count('(') - self.display_expression.count(')')
+        self.display_expression += (" )" * count_parenthesis_display_expression)
+
+        self.expression.value = self.display_expression
+        self.expression.update()
 
 
     def evaluate_expression(self):
-
         try:
+            self.close_expression()
 
             result_value = eval(
-
                 self.current_expression, {"__builtins__": None}, {"math": math}
-
             )
 
-
-
             if isinstance(result_value, float) and result_value.is_integer():
-
                 result_value = int(result_value)
-
             else:
-
                 result_value = str(round(result_value, 2))
 
-
-
             self.result.value = self.format_result(str(result_value))
-
             self.result.update()
-
             self.last_result = str(result_value)
 
-
-
             for history_id in reversed(range(1, 11)):
-
                 if not self.page.client_storage.contains_key(str(history_id)):
-
                     self.page.client_storage.set(
-
                         str(history_id), (self.display_expression, result_value)
-
                     )
-
                     break
-
             else:
-
                 for history_id in reversed(range(1, 11)):
-
                     if history_id < 10:
-
                         self.page.client_storage.set(
-
                             str(history_id + 1),
-
                             self.page.client_storage.get(str(history_id)),
-
                         )
-
                 self.page.client_storage.set(
-
                     "1", (self.display_expression, result_value)
-
                 )
 
-
-
             self.load_history()
-
             self.current_expression = ""
-
             self.display_expression = ""
 
-
-
         except Exception:
-
             self.result.value = "Error"
-
-
 
     def add_to_expression(self, value, display_value, check_parentheses=False):
 
-        self.lastExpression.append([len(str(value)), len(str(display_value))])
-
-
-
         if len(self.display_expression) > 0 and (
-
                 value not in "0123456789" or self.display_expression[-1] not in "0123456789"
-
             ):
-
             self.display_expression += " "
 
-
-
         if check_parentheses and value == ")":
-
             pattern = re.compile(r"math\.(cos|sin|tan)\(math\.radians\([^()]*$")
-
             if pattern.search(self.current_expression):
-
                 self.current_expression += "))"
-
             else:
-
-                self.current_expression += value
-
+                if self.display_expression and (self.display_expression[-2] in "(" or self.display_expression[-1] in "("):
+                    self.current_expression += '0' + value
+                    self.display_expression += '0 '
+                    self.lastExpression.append([len(str('0')), len(str('0'))])
+                else:
+                    self.current_expression += value
             self.display_expression += value
 
-        else:
-
             self.current_expression += value
-
             self.display_expression += display_value
-
-
-
+        
+        self.lastExpression.append([len(str(value)), len(str(display_value))])
         self.expression.value = self.display_expression
-
         self.expression.update()
-
-
 
     def clear_expression(self):
-
         self.result.value = ""
-
         self.expression.value = ""
-
         self.current_expression = ""
-
         self.display_expression = ""
-
         self.result.update()
-
         self.expression.update()
-
         self.page.update()
 
-
-
     def delete_last_character(self, e):
-
         if len(self.lastExpression) > 0:
-
             self.current_expression = self.current_expression[:-self.lastExpression[-1][0]]
-
             self.display_expression = self.display_expression[:-self.lastExpression[-1][1]]
-
             self.lastExpression.pop()
-
             if self.display_expression.endswith(" "):
-
                 self.display_expression = self.display_expression[: -1]
-
         
-
         self.expression.value = self.display_expression
-
         self.expression.update()
 
-
-
     def toggle_sign(self):
-
         if self.current_expression and self.current_expression[-1].isdigit():
-
             sign_index = len(self.current_expression) - 1
-
             while sign_index >= 0 and (
-
                 self.current_expression[sign_index].isdigit()
-
                 or self.current_expression[sign_index] == "."
-
             ):
-
                 sign_index -= 1
-
             sign_index += 1
 
-
-
             is_negative = self.current_expression[sign_index - 1] == "-"
-
             has_operator_before = sign_index == 0 or any(
-
                 op in self.current_expression[sign_index - 1] for op in "+-*/"
-
             )
 
-
-
             if is_negative:
-
                 self.current_expression = (
-
                     self.current_expression[: sign_index - 1]
-
                     + self.current_expression[sign_index:]
-
                 )
-
                 self.display_expression = (
-
                     self.display_expression[: sign_index - 1]
-
                     + self.display_expression[sign_index:]
-
                 )
-
             elif has_operator_before:
-
                 self.current_expression = (
-
                     self.current_expression[:sign_index]
-
                     + "-"
-
                     + self.current_expression[sign_index:]
-
                 )
-
                 self.display_expression = (
-
                     self.display_expression[:sign_index]
-
                     + "-"
-
                     + self.display_expression[sign_index:]
-
                 )
-
             self.expression.value = self.display_expression
-
-
 
             self.expression.update()
 
-
-
     def format_result(self, valueNumber):
-
         saveValue = valueNumber.split('.')
-
         oldValue = list(saveValue[0])
-
         newValue = []
-
         if len(valueNumber) > 3:
-
             counter = 0
-
             oldValue.reverse()
-
             for i in oldValue:
-
                 if counter == 3:
-
                     newValue.append(' ')
-
                     counter = 0
-
                 newValue.append(i)
-
                 counter +=1
-
             newValue.reverse()
 
-
-
             valueNumber = str(''.join(newValue) + '.' + saveValue[1]) if (len(saveValue) > 1) else str(''.join(newValue))
-
         return valueNumber
-
     
-
 def main(page: ft.Page):
-
     CalculatorApp(page)
-
-
-
 
 
 ft.app(target=main, assets_dir="assets")
