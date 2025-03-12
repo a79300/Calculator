@@ -401,11 +401,7 @@ class CalculatorApp:
                     self.current_expression += value
             self.display_expression += value
         else:
-            if value == "(" and self.display_expression and self.display_expression[-2] in "0123456789":
-                self.current_expression += '*'
-                self.display_expression += '*' + " "
-                self.lastExpression.append([len(str('*')), len(str('*'))])
-            if value in "0123456789"  and self.display_expression and self.display_expression[-2] == ")":
+            if (value == "(" and self.display_expression and self.display_expression[-2] in "0123456789)") or (value in "0123456789"  and self.display_expression and self.display_expression[-2] == ")"):
                 self.current_expression += '*'
                 self.display_expression += '*' + " "
                 self.lastExpression.append([len(str('*')), len(str('*'))])
