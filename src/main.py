@@ -17,6 +17,8 @@ class CalculatorApp:
         self.page = page
         self.columns = []
 
+        self.lastExpression = []
+
         self.get_text_size(self.page.height)
 
         self.expression = ft.TextField(
@@ -357,6 +359,7 @@ class CalculatorApp:
             self.result.value = "Error"
 
     def add_to_expression(self, value, display_value, check_parentheses=False):
+        self.lastExpression.append([len(str(value)), len(str(display_value))])
 
         if len(self.display_expression) > 0 and (
                 value not in "0123456789" or self.display_expression[-1] not in "0123456789"
@@ -387,8 +390,13 @@ class CalculatorApp:
         self.page.update()
 
     def delete_last_character(self, e):
-        self.current_expression = self.current_expression[:-1]
-        self.display_expression = self.display_expression[:-1]
+        if len(self.lastExpression) > 0:
+            self.current_expression = self.current_expression[:-self.lastExpression[-1][0]]
+            self.display_expression = self.display_expression[:-self.lastExpression[-1][1]]
+            self.lastExpression.pop()
+            if self.display_expression.endswith(" "):
+                self.display_expression = self.display_expression[: -1]
+        
         self.expression.value = self.display_expression
         self.expression.update()
 
