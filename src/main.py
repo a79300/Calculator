@@ -162,6 +162,112 @@ class CalculatorApp:
             self.load_history()
         self.page.update()
 
+    def load_history(self):
+        self.history_list.controls.clear()
+        for history_id in range(1, 11):
+            if self.page.client_storage.contains_key(str(history_id)):
+                expression, result_value = self.page.client_storage.get(str(history_id))
+                self.history_list.controls.append(
+                    ft.Column(
+                        [
+                            ft.ResponsiveRow(
+                                [
+                                    ft.Column(
+                                        [
+                                            ft.ResponsiveRow(
+                                                [
+                                                    ft.Text(
+                                                        f"{expression}",
+                                                        size=self.history_letter_size,
+                                                        color=ft.Colors.GREY,
+                                                    ),
+                                                ]
+                                            ),
+                                            ft.ResponsiveRow(
+                                                [
+                                                    ft.Text(
+                                                        f"{result_value}",
+                                                        size=self.history_letter_size,
+                                                        color=ft.Colors.WHITE,
+                                                    ),
+                                                ]
+                                            ),
+                                        ],
+                                        col={
+                                            "xs": 9,
+                                            "sm": 9,
+                                            "md": 9,
+                                            "xl": 9,
+                                        },
+                                    ),
+                                    ft.Column(
+                                        [
+                                            ft.ResponsiveRow(
+                                                [
+                                                    ft.Column(
+                                                        [
+                                                            ft.IconButton(
+                                                                icon=ft.Icons.COPY,
+                                                                icon_color="gray",
+                                                                icon_size=self.history_letter_size,
+                                                                on_click=self.copy_value(
+                                                                    str(history_id)
+                                                                ),
+                                                                width=self.history_letter_size,
+                                                                height=self.history_letter_size,
+                                                                padding=ft.padding.all(
+                                                                    0
+                                                                ),
+                                                            )
+                                                        ],
+                                                        col={
+                                                            "xs": 6,
+                                                            "sm": 6,
+                                                            "md": 6,
+                                                            "xl": 6,
+                                                        },
+                                                    ),
+                                                    ft.Column(
+                                                        [
+                                                            ft.IconButton(
+                                                                icon=ft.Icons.DELETE,
+                                                                icon_color="red",
+                                                                icon_size=self.history_letter_size,
+                                                                on_click=self.delete_history(
+                                                                    str(history_id)
+                                                                ),
+                                                                width=self.history_letter_size,
+                                                                height=self.history_letter_size,
+                                                                padding=ft.padding.all(
+                                                                    0
+                                                                ),
+                                                            ),
+                                                        ],
+                                                        col={
+                                                            "xs": 6,
+                                                            "sm": 6,
+                                                            "md": 6,
+                                                            "xl": 6,
+                                                        },
+                                                    ),
+                                                ]
+                                            ),
+                                        ],
+                                        col={
+                                            "xs": 3,
+                                            "sm": 3,
+                                            "md": 3,
+                                            "xl": 3,
+                                        },
+                                    ),
+                                ],
+                            ),
+                            ft.Divider(height=1),
+                        ]
+                    )
+                )
+        self.history_list.update()
+    
     def copy_value(self, id):
         def copy(e):
             _, result_value = self.page.client_storage.get(id)
