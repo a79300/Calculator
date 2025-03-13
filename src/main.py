@@ -1,6 +1,7 @@
 import flet as ft
 import math
 import re
+from datetime import datetime
 
 
 class CalculatorApp:
@@ -15,7 +16,6 @@ class CalculatorApp:
             ["1", "2", "3", "+"],
             ["0", ".", "ANS", "="],
         ]
-        page.title = "Calculator"
         self.page = page
         self.columns = []
         self.result_size = 70
@@ -25,15 +25,21 @@ class CalculatorApp:
         self.last_result = ""
         self.lastExpression = []
         self.history = []
+        self.history_id = 1
 
-        if not self.page.client_storage.contains_key("history"):
+        if False:
+            self.page.client_storage.clear()
+
+        if not self.page.client_storage.contains_key(str("history")):
             self.page.client_storage.set(str("history"), self.history)
         else:
-            self.history = self.page.client_storage.get("history")
+            self.history = self.page.client_storage.get(str("history"))
+
+        if self.history:
+            self.history_id += int(self.history[0][0])
 
         self.expression = ft.TextField(
             hint_text="...",
-            color="white",
             text_align=ft.TextAlign.RIGHT,
             read_only=True,
             expand=True,
@@ -43,7 +49,6 @@ class CalculatorApp:
 
         self.result = ft.TextField(
             hint_text="0",
-            color="white",
             text_align=ft.TextAlign.RIGHT,
             read_only=True,
             expand=True,
@@ -63,12 +68,7 @@ class CalculatorApp:
                             color=ft.Colors.WHITE,
                             on_click=self.button_click,
                         ),
-                        col={
-                            "xs": 3,
-                            "sm": 3,
-                            "md": 3,
-                            "xl": 3,
-                        },
+                        col=3,
                     ))
 
         self.close_button = ft.IconButton(
@@ -80,15 +80,15 @@ class CalculatorApp:
         )
 
         self.history_list = ft.Column(
-            scroll=None,
-            height=self.page.height * 0.55,
+            scroll=ft.ScrollMode.HIDDEN,
+            height=self.page.height,
             alignment=ft.MainAxisAlignment.START,
             controls=[],
         )
 
         self.history_container = ft.Container(
             content=ft.Column([
-                ft.ResponsiveRow([self.close_button], alignment="end"),
+                ft.ResponsiveRow([self.close_button]),
                 ft.ResponsiveRow([self.history_list]),
             ]),
             bgcolor=ft.Colors.BLACK,
@@ -98,7 +98,6 @@ class CalculatorApp:
         )
 
         self.menu_icon = ft.IconButton(icon=ft.Icons.MENU,
-                                       icon_color="white",
                                        on_click=self.toggle_history,
                                        icon_size=self.letter_size * 1.5,
                                        width=self.letter_size * 1.5,
@@ -107,26 +106,9 @@ class CalculatorApp:
 
         self.main_container = ft.Column([
             ft.ResponsiveRow([
-                ft.Divider(height=20, color=ft.Colors.TRANSPARENT),
+                ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                 ft.Column([
-                    ft.ResponsiveRow([
-                        ft.Column([self.menu_icon],
-                                  col={
-                                      "xs": 3,
-                                      "sm": 3,
-                                      "md": 3,
-                                      "xl": 3,
-                                  }),
-                        ft.Column(
-                            [],
-                            col={
-                                "xs": 9,
-                                "sm": 9,
-                                "md": 9,
-                                "xl": 9,
-                            },
-                        )
-                    ]),
+                    ft.ResponsiveRow([ft.Column([self.menu_icon])]),
                     ft.ResponsiveRow([self.expression]),
                     ft.ResponsiveRow([self.result]),
                 ])
@@ -164,96 +146,116 @@ class CalculatorApp:
     def load_history(self):
         self.history_list.controls.clear()
         for field in self.history:
-            expression = field[0]
-            result_value = field[1]
-            self.history_list.controls.append(
-                ft.Column([
-                    ft.ResponsiveRow([
-                        ft.Column(
+            if len(field) == 4:
+                _id = field[0]
+                expression = field[1]
+                result_value = field[2]
+                _date = field[3]
+                self.history_list.controls.append(
+                    ft.Column([
+                        ft.ResponsiveRow(
                             [
-                                ft.ResponsiveRow([
-                                    ft.Text(
-                                        f"{expression}",
-                                        size=self.history_letter_size,
-                                        color=ft.Colors.GREY,
-                                    ),
-                                ]),
-                                ft.ResponsiveRow([
-                                    ft.Text(
-                                        f"{result_value}",
-                                        size=self.history_letter_size,
-                                        color=ft.Colors.WHITE,
-                                    ),
-                                ]),
-                            ],
-                            col={
-                                "xs": 9,
-                                "sm": 9,
-                                "md": 9,
-                                "xl": 9,
-                            },
-                        ),
-                        ft.Column(
-                            [
-                                ft.ResponsiveRow([
-                                    ft.Column(
-                                        [
-                                            ft.IconButton(
-                                                icon=ft.Icons.COPY,
-                                                icon_color="gray",
-                                                icon_size=self.
-                                                history_letter_size * 2,
-                                                on_click=self.copy_value(
-                                                    field),
-                                                width=self.history_letter_size
-                                                * 2,
-                                                height=self.history_letter_size
-                                                * 2,
-                                                padding=ft.padding.all(0),
-                                            )
-                                        ],
-                                        col={
-                                            "xs": 6,
-                                            "sm": 6,
-                                            "md": 6,
-                                            "xl": 6,
-                                        },
-                                    ),
-                                    ft.Column(
-                                        [
-                                            ft.IconButton(
-                                                icon=ft.Icons.DELETE,
-                                                icon_color="red",
-                                                icon_size=self.
-                                                history_letter_size * 2,
-                                                on_click=self.delete_history(
-                                                    field),
-                                                width=self.history_letter_size
-                                                * 2,
-                                                height=self.history_letter_size
-                                                * 2,
-                                                padding=ft.padding.all(0),
+                                ft.Column(
+                                    [
+                                        ft.ResponsiveRow([
+                                            ft.Text(
+                                                f"{_id}",
+                                                size=self.history_letter_size *
+                                                2.75,
+                                                color=ft.Colors.RED,
                                             ),
-                                        ],
-                                        col={
-                                            "xs": 6,
-                                            "sm": 6,
-                                            "md": 6,
-                                            "xl": 6,
-                                        },
-                                    ),
-                                ]),
+                                        ]),
+                                    ],
+                                    col=3,
+                                ),
+                                ft.Column(
+                                    [
+                                        ft.ResponsiveRow([
+                                            ft.Text(
+                                                f"{expression}",
+                                                size=self.history_letter_size,
+                                                color=ft.Colors.GREY,
+                                            ),
+                                        ]),
+                                        ft.ResponsiveRow([
+                                            ft.Text(
+                                                f"{result_value}",
+                                                size=self.history_letter_size,
+                                                color=ft.Colors.WHITE,
+                                            ),
+                                        ]),
+                                    ],
+                                    col=6,
+                                ),
+                                ft.Column(
+                                    [
+                                        ft.ResponsiveRow([
+                                            ft.Column([
+                                                ft.IconButton(
+                                                    icon=ft.Icons.COPY,
+                                                    icon_color="gray",
+                                                    icon_size=self.
+                                                    history_letter_size * 2,
+                                                    on_click=self.copy_value(
+                                                        field),
+                                                    width=self.
+                                                    history_letter_size * 2,
+                                                    height=self.
+                                                    history_letter_size * 2,
+                                                    padding=ft.padding.all(0),
+                                                )
+                                            ],
+                                                      col=6,
+                                                      alignment=ft.
+                                                      MainAxisAlignment.END,
+                                                      horizontal_alignment=ft.
+                                                      CrossAxisAlignment.END),
+                                            ft.Column([
+                                                ft.IconButton(
+                                                    icon=ft.Icons.DELETE,
+                                                    icon_color="red",
+                                                    icon_size=self.
+                                                    history_letter_size * 2,
+                                                    on_click=self.
+                                                    delete_history(field),
+                                                    width=self.
+                                                    history_letter_size * 2,
+                                                    height=self.
+                                                    history_letter_size * 2,
+                                                    padding=ft.padding.all(0),
+                                                ),
+                                            ],
+                                                      col=6,
+                                                      alignment=ft.
+                                                      MainAxisAlignment.END,
+                                                      horizontal_alignment=ft.
+                                                      CrossAxisAlignment.END),
+                                        ]),
+                                        ft.ResponsiveRow([
+                                            ft.Column([
+                                                ft.Text(
+                                                    f"{_date}",
+                                                    size=self.
+                                                    history_letter_size * 1,
+                                                    color=ft.Colors.
+                                                    with_opacity(
+                                                        0.5, ft.Colors.WHITE),
+                                                ),
+                                            ],
+                                                      alignment=ft.
+                                                      MainAxisAlignment.END,
+                                                      horizontal_alignment=ft.
+                                                      CrossAxisAlignment.END)
+                                        ]),
+                                    ],
+                                    col=3,
+                                ),
                             ],
-                            col={
-                                "xs": 3,
-                                "sm": 3,
-                                "md": 3,
-                                "xl": 3,
-                            },
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
-                    ], ),
-                    ft.Divider(height=1),
-                ]))
+                        ft.Divider(height=1),
+                    ]))
         self.history_list.update()
 
     def delete_history(self, field):
@@ -261,7 +263,7 @@ class CalculatorApp:
         def delete(e):
             if field in self.history:
                 self.history.remove(field)
-                self.page.client_storage.set("history", self.history)
+                self.page.client_storage.set(str("history"), self.history)
             self.load_history()
 
         return delete
@@ -344,13 +346,16 @@ class CalculatorApp:
 
             if len(self.history) == 10:
                 self.history.pop()
-            self.history.insert(0, [self.display_expression, result_value])
-
+            self.history.insert(0, [
+                self.history_id, self.display_expression, result_value,
+                str(datetime.now().strftime("%d/%m/%Y %H:%M"))
+            ])
+            self.history_id += 1
             self.page.client_storage.set(str("history"), self.history)
             self.current_expression = ""
             self.display_expression = ""
 
-        except Exception:
+        except Exception as e:
             self.result.value = "Error"
 
     def add_to_expression(self, value, display_value, check_parentheses=False):
@@ -474,4 +479,4 @@ def main(page: ft.Page):
     CalculatorApp(page)
 
 
-app = ft.app(target=main, assets_dir="assets", view=ft.AppView.WEB_BROWSER, name="Calculator")
+app = ft.app(target=main, assets_dir="assets", view=ft.AppView.WEB_BROWSER)
