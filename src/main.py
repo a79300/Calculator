@@ -15,6 +15,7 @@ class CalculatorApp:
             ["1", "2", "3", "+"],
             ["0", ".", "ANS", "="],
         ]
+        page.title = "Calculator"
         self.page = page
         self.columns = []
         self.result_size = 70
@@ -23,10 +24,16 @@ class CalculatorApp:
         self.display_expression = ""
         self.last_result = ""
         self.lastExpression = []
+        self.history = []
+
+        if not self.page.client_storage.contains_key("history"):
+            self.page.client_storage.set(str("history"), self.history)
+        else:
+            self.history = self.page.client_storage.get("history")
 
         self.expression = ft.TextField(
             hint_text="...",
-            color="black",
+            color="white",
             text_align=ft.TextAlign.RIGHT,
             read_only=True,
             expand=True,
@@ -36,7 +43,7 @@ class CalculatorApp:
 
         self.result = ft.TextField(
             hint_text="0",
-            color="black",
+            color="white",
             text_align=ft.TextAlign.RIGHT,
             read_only=True,
             expand=True,
@@ -89,38 +96,38 @@ class CalculatorApp:
             padding=ft.padding.all(20),
             visible=False,
         )
+
+        self.menu_icon = ft.IconButton(icon=ft.Icons.MENU,
+                                       icon_color="white",
+                                       on_click=self.toggle_history,
+                                       icon_size=self.letter_size * 1.5,
+                                       width=self.letter_size * 1.5,
+                                       height=self.letter_size * 1.5,
+                                       padding=ft.padding.all(0))
+
         self.main_container = ft.Column([
             ft.ResponsiveRow([
+                ft.Divider(height=20, color=ft.Colors.TRANSPARENT),
                 ft.Column([
                     ft.ResponsiveRow([
+                        ft.Column([self.menu_icon],
+                                  col={
+                                      "xs": 3,
+                                      "sm": 3,
+                                      "md": 3,
+                                      "xl": 3,
+                                  }),
                         ft.Column(
-                            [
-                                ft.IconButton(
-                                    icon=ft.Icons.MENU,
-                                    icon_color="black",
-                                    on_click=self.toggle_history,
-                                    icon_size=self.letter_size * 1.5,
-                                    width=self.letter_size * 1.5,
-                                    height=self.letter_size * 1.5,
-                                )
-                            ],
-                            col={
-                                "xs": 3,
-                                "sm": 3,
-                                "md": 3,
-                                "xl": 3,
-                            },
-                        ),
-                        ft.Column(
-                            [self.expression],
+                            [],
                             col={
                                 "xs": 9,
                                 "sm": 9,
                                 "md": 9,
                                 "xl": 9,
                             },
-                        ),
+                        )
                     ]),
+                    ft.ResponsiveRow([self.expression]),
                     ft.ResponsiveRow([self.result]),
                 ])
             ]),
@@ -148,13 +155,6 @@ class CalculatorApp:
         self.history_letter_size = self.result_size // 8.5
         self.page.update()
 
-    def resizeTexts(self):
-        ##self.result_size = self.result_size * 0.9
-        ##self.expression_size = self.result_size / 2
-        #print(type(self.result_size))
-        #print(type(self.expression_size))
-        self.page.update()
-
     def toggle_history(self, e):
         self.history_container.visible = not self.history_container.visible
         if self.history_container.visible:
@@ -163,120 +163,119 @@ class CalculatorApp:
 
     def load_history(self):
         self.history_list.controls.clear()
-        for history_id in range(1, 11):
-            if self.page.client_storage.contains_key(str(history_id)):
-                expression, result_value = self.page.client_storage.get(
-                    str(history_id))
-                self.history_list.controls.append(
-                    ft.Column([
-                        ft.ResponsiveRow([
-                            ft.Column(
-                                [
-                                    ft.ResponsiveRow([
-                                        ft.Text(
-                                            f"{expression}",
-                                            size=self.history_letter_size,
-                                            color=ft.Colors.GREY,
-                                        ),
-                                    ]),
-                                    ft.ResponsiveRow([
-                                        ft.Text(
-                                            f"{result_value}",
-                                            size=self.history_letter_size,
-                                            color=ft.Colors.WHITE,
-                                        ),
-                                    ]),
-                                ],
-                                col={
-                                    "xs": 9,
-                                    "sm": 9,
-                                    "md": 9,
-                                    "xl": 9,
-                                },
-                            ),
-                            ft.Column(
-                                [
-                                    ft.ResponsiveRow([
-                                        ft.Column(
-                                            [
-                                                ft.IconButton(
-                                                    icon=ft.Icons.COPY,
-                                                    icon_color="gray",
-                                                    icon_size=self.
-                                                    history_letter_size,
-                                                    on_click=self.copy_value(
-                                                        str(history_id)),
-                                                    width=self.
-                                                    history_letter_size,
-                                                    height=self.
-                                                    history_letter_size,
-                                                    padding=ft.padding.all(0),
-                                                )
-                                            ],
-                                            col={
-                                                "xs": 6,
-                                                "sm": 6,
-                                                "md": 6,
-                                                "xl": 6,
-                                            },
-                                        ),
-                                        ft.Column(
-                                            [
-                                                ft.IconButton(
-                                                    icon=ft.Icons.DELETE,
-                                                    icon_color="red",
-                                                    icon_size=self.
-                                                    history_letter_size,
-                                                    on_click=self.
-                                                    delete_history(
-                                                        str(history_id)),
-                                                    width=self.
-                                                    history_letter_size,
-                                                    height=self.
-                                                    history_letter_size,
-                                                    padding=ft.padding.all(0),
-                                                ),
-                                            ],
-                                            col={
-                                                "xs": 6,
-                                                "sm": 6,
-                                                "md": 6,
-                                                "xl": 6,
-                                            },
-                                        ),
-                                    ]),
-                                ],
-                                col={
-                                    "xs": 3,
-                                    "sm": 3,
-                                    "md": 3,
-                                    "xl": 3,
-                                },
-                            ),
-                        ], ),
-                        ft.Divider(height=1),
-                    ]))
+        for field in self.history:
+            expression = field[0]
+            result_value = field[1]
+            self.history_list.controls.append(
+                ft.Column([
+                    ft.ResponsiveRow([
+                        ft.Column(
+                            [
+                                ft.ResponsiveRow([
+                                    ft.Text(
+                                        f"{expression}",
+                                        size=self.history_letter_size,
+                                        color=ft.Colors.GREY,
+                                    ),
+                                ]),
+                                ft.ResponsiveRow([
+                                    ft.Text(
+                                        f"{result_value}",
+                                        size=self.history_letter_size,
+                                        color=ft.Colors.WHITE,
+                                    ),
+                                ]),
+                            ],
+                            col={
+                                "xs": 9,
+                                "sm": 9,
+                                "md": 9,
+                                "xl": 9,
+                            },
+                        ),
+                        ft.Column(
+                            [
+                                ft.ResponsiveRow([
+                                    ft.Column(
+                                        [
+                                            ft.IconButton(
+                                                icon=ft.Icons.COPY,
+                                                icon_color="gray",
+                                                icon_size=self.
+                                                history_letter_size * 2,
+                                                on_click=self.copy_value(
+                                                    field),
+                                                width=self.history_letter_size
+                                                * 2,
+                                                height=self.history_letter_size
+                                                * 2,
+                                                padding=ft.padding.all(0),
+                                            )
+                                        ],
+                                        col={
+                                            "xs": 6,
+                                            "sm": 6,
+                                            "md": 6,
+                                            "xl": 6,
+                                        },
+                                    ),
+                                    ft.Column(
+                                        [
+                                            ft.IconButton(
+                                                icon=ft.Icons.DELETE,
+                                                icon_color="red",
+                                                icon_size=self.
+                                                history_letter_size * 2,
+                                                on_click=self.delete_history(
+                                                    field),
+                                                width=self.history_letter_size
+                                                * 2,
+                                                height=self.history_letter_size
+                                                * 2,
+                                                padding=ft.padding.all(0),
+                                            ),
+                                        ],
+                                        col={
+                                            "xs": 6,
+                                            "sm": 6,
+                                            "md": 6,
+                                            "xl": 6,
+                                        },
+                                    ),
+                                ]),
+                            ],
+                            col={
+                                "xs": 3,
+                                "sm": 3,
+                                "md": 3,
+                                "xl": 3,
+                            },
+                        ),
+                    ], ),
+                    ft.Divider(height=1),
+                ]))
         self.history_list.update()
 
-    def delete_history(self, id):
+    def delete_history(self, field):
 
         def delete(e):
-            self.page.client_storage.remove(id)
+            if field in self.history:
+                self.history.remove(field)
+                self.page.client_storage.set("history", self.history)
             self.load_history()
 
         return delete
 
-    def copy_value(self, id):
+    def copy_value(self, field):
 
         def copy(e):
-            _, result_value = self.page.client_storage.get(id)
-            self.page.set_clipboard(result_value)
+            if field in self.history:
+                result_value = field[1]
+                self.page.set_clipboard(result_value)
 
         return copy
 
     def button_click(self, e):
-        self.resizeTexts()
-        print(self.current_expression)
 
         if not self.current_expression and e.control.text in "=%DEL^*+-./":
             return
@@ -343,23 +342,11 @@ class CalculatorApp:
             self.result.update()
             self.last_result = str(result_value)
 
-            for history_id in reversed(range(1, 11)):
-                if not self.page.client_storage.contains_key(str(history_id)):
-                    self.page.client_storage.set(
-                        str(history_id),
-                        (self.display_expression, result_value))
-                    break
-            else:
-                for history_id in reversed(range(1, 11)):
-                    if history_id < 10:
-                        self.page.client_storage.set(
-                            str(history_id + 1),
-                            self.page.client_storage.get(str(history_id)),
-                        )
-                self.page.client_storage.set(
-                    "1", (self.display_expression, result_value))
+            if len(self.history) == 10:
+                self.history.pop()
+            self.history.insert(0, [self.display_expression, result_value])
 
-            self.load_history()
+            self.page.client_storage.set(str("history"), self.history)
             self.current_expression = ""
             self.display_expression = ""
 
@@ -389,13 +376,16 @@ class CalculatorApp:
                     self.current_expression += value
             self.display_expression += value
         else:
-            if (value == "(" and self.display_expression
-                    and self.display_expression[-2] in "0123456789)") or (
-                        value in "0123456789" and self.display_expression
-                        and self.display_expression[-2] == ")"):
-                self.current_expression += '*'
-                self.display_expression += '*' + " "
-                self.lastExpression.append([len(str('*')), len(str('*'))])
+            try:
+                if (value == "(" and self.display_expression
+                        and self.display_expression[-2] in "0123456789)") or (
+                            value in "0123456789" and self.display_expression
+                            and self.display_expression[-2] == ")"):
+                    self.current_expression += '*'
+                    self.display_expression += '*' + " "
+                    self.lastExpression.append([len(str('*')), len(str('*'))])
+            except Exception:
+                pass
 
             self.current_expression += value
             self.display_expression += display_value
@@ -484,10 +474,4 @@ def main(page: ft.Page):
     CalculatorApp(page)
 
 
-app = ft.app(target=main, assets_dir="assets", view=ft.AppView.WEB_BROWSER)
-
-# This makes the app work with Replit
-# nao é necessario
-"""if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)"""
+app = ft.app(target=main, assets_dir="assets", view=ft.AppView.WEB_BROWSER, name="Calculator")
