@@ -38,6 +38,8 @@ class CalculatorApp:
         if self.history:
             self.history_id += int(self.history[0][0])
 
+        self.history_id = 1 #apagarr
+        
         self.expression = ft.TextField(
             hint_text="...",
             text_align=ft.TextAlign.RIGHT,
